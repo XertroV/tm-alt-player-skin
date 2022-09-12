@@ -1,6 +1,6 @@
 # Trackmania 2020 Female / Alternate Player Character Skin
 
-This allows you to change all in-game skins for other drivers / players.
+This allows you to change all in-game skins (it changes it for all character models).
 A restart is required when you change your skin.
 (Unless you have only been in the menu -- the skin *might* load in when you load up a map.)
 
