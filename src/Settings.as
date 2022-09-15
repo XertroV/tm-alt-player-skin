@@ -81,6 +81,7 @@ void RenderMenuBgSettings() {
     if (UI::Button("Show me the wizard again!")) {
         Wizard::currWizardSlide = 0;
         State_WizardShouldRun_22_09_14 = true;
+        Wizard::ShowWindow = true;
     }
 
     if (!PluginIsEnabled()) UI::EndDisabled();
