@@ -148,7 +148,7 @@ namespace Wizard {
         UI::TextWrapped("This plugin works by managing files in \\$b8fDocuments\\Trackmania\\Skins\\Models\\$z. For full functionality, please consent to the following:");
         Sep();
         Heading("Manage Default Skin");
-        UI::TextWrapped("Management (including deletion) of the default skin in \\$b8fD\\T\\Skins\\Models\\HelmetPilot\\Stadium\\$z. When the default skin is applied, this directory is deleted.");
+        UI::TextWrapped("Management (including deletion) of the default skin in \\$b8fD\\T\\Skins\\Models\\HelmetPilot\\Stadium\\$z. When the standard (male dark gray) skin is applied, this directory is deleted.");
         tmpConsentDefault = ConsentRadios("mng-default", tmpConsentDefault);
         Sep();
         Heading("Manage Auxillary Skins");

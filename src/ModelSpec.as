@@ -75,9 +75,6 @@ void CheckCustomTextureAndDLWhenAbsent(ref@ r) {
     print("Downloaded " + ct.url);
 }
 
-// This is the raw hex file for the zip that's needed.
-const string ZipFileHex = "4b5004030014000000085b0b4c6fea4248470036000000390000001b0000656369636e2065277473702073617520656e7320696b2e6e78740574c1c1000d0821c004b6568bb545ee01121403d7e46c3a99ccc4c96d2f23086e91fe856259c11228c52097a13ac254715c9a373dd7500f014b3f021400000008000b006f5b424c47ea36480000390000001b0024000000000000002000000000000000630063652069276e73652074617020736e7520656b736e69742e7478000a00200000000000010018d083c82abc4701d331ddb1babc4701d331ddb1babc4701d34b5006050000000000010001006d0000006f0000";
-
 const string[] _BodyFiles = {"Body_B.dds", "Body_E.dds", "Body_N.dds", "Body_R.dds"};
 const string[] _CVFiles = {"ChestVisor_B.dds", "ChestVisor_E.dds", "ChestVisor_N.dds", "ChestVisor_R.dds"};
 const string[] _HelmetFiles = {"Helmet_B.dds", "Helmet_E.dds", "Helmet_N.dds", "Helmet_R.dds"};
