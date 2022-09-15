@@ -26,3 +26,39 @@ Suggestions/feedback: @XertroV on Openplanet discord
 Code/issues: [https://github.com/XertroV/tm-alt-driver](https://github.com/XertroV/tm-alt-driver)
 
 GL HF
+
+-----------
+
+## Notes:
+
+* `ChestVisor_{B,E,N,R}` takes precedence based on `HelmetPilot` (male versions work over female model when only replacing these files)
+  * changes color of visor and color of chest TM logo
+* `Body_{B,E,N,R}` also works based on `HelmetPilot`
+  * changes color of suit
+* `HelmetVisor_{R,B,N}` also based on `HelmetPilot`
+  * changes an overlay color of the visor
+* (`HelmetPilot`) Male mesh with female `Body_` files (light skin) has dark helmet
+  * replacing `HelmetVisor_` in `StadiumMale` did not help
+  * deleting `Helmet_` resulting in a normal-map-esq coloring
+  * changing `player.mesh.gbx` back to female in `HelmetPilot` restored normality (note: no `Helmet_` files present)
+
+for new skins, we need in `Models\HelmetPilot`:
+  * name.zip (with the text file)
+  * folder with:
+    * HV, CV, Body from wherever and Helmet from `HelmetPilot\Stadium`
+  * need zips in `Models\CharacterPilot` too, but not the folders apparently if they're already in `HelmetPilot`
+
+female helmetvisor_b will change appearance of male helmetvisor
+
+to replace default char:
+- CharPilot\StadiumMale:
+  - Body, ChestVisor
+- HelmetPilot\Stadium:
+  - Body, ChestVisor, Helmet, HelmetVisor, Anim, Mesh
+
+For arbitrary char:
+- CharPilot\Name.zip
+- HelmetPilot\Name.zip
+- HelmetPilot\Name:
+  - B, CV, H, HV, A, M
+- HelmetPilot\Name\Icon.tga appears to be required...

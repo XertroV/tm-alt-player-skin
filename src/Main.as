@@ -1,6 +1,6 @@
 /* overview:
 
-  the plugin will add files to `Trackmania\Skins\Models\CharacterPilot\StadiumMale`
+  the plugin will add files to `Trackmania\Skins\Models\HelmetPilot\Stadium`
   to change the default skin that's used.
 
   other skins could be support too if ppl make them, but IDK how.
@@ -15,6 +15,16 @@
 void Main() {
     // we do stuff through coros so settings have a chance to load
     startnew(CoroMain);
+    // startnew(TestMain);
+}
+
+void Render() {
+   Wizard::Render();
+}
+
+void TestMain() {
+    // auto ms = ModelSpec(ModelPreset::FemaleBlack);
+    // ms.WriteModelSpecTo("Stadium");
 }
 
 void OnSettingsChanged() {
@@ -22,109 +32,76 @@ void OnSettingsChanged() {
 }
 
 void CoroMain() {
+    startnew(EnsureCustomTexturesDownloaded);
     sleep(100);  // wait for settings etc
-    if (Setting_FirstRunDone == false) {
+    startnew(CoroMainDefaultSkin);
+    startnew(CoroMainAuxSkin);
+}
+
+void CoroMainDefaultSkin() {
+    while (!Consent_ChangeDefault) {
+        sleep(100);
+    }
+    if (!State_FirstRunComplete) {
         UpdatePlayerSkin();
+        State_FirstRunComplete = true;
+    }
+}
+void CoroMainAuxSkin() {
+    while (!Consent_AuxSkins) {
+        sleep(100);
+    }
+    if (State_FirstRunComplete && !State_CheckedForV1Skins) startnew(RemoveOldSkins);
+    if (!State_SetUpAuxSkins) {
+        PopulateAuxSkins();
+        State_SetUpAuxSkins = true;
     }
 }
 
-
-bool GameFileExists(const string &in path) {
-    return Fids::GetGame(path).ByteSize > 0;
+void RemoveOldSkins() {
+    if (!Consent_AuxSkins) return;
+    // run only if we've already run the plugin before and we haven't checked for old semi-broken skins
+    if (!State_FirstRunComplete || State_CheckedForV1Skins) return;
+    string oldDirBase = IO::FromUserGameFolder("Skins\\Models\\CharacterPilot\\");
+    string[] oldSkinDirs = {"StadiumMale", "StadiumFemale"};
+    for (uint i = 0; i < oldSkinDirs.Length; i++) {
+        auto skinDir = oldDirBase + oldSkinDirs[i];
+        if (IO::FolderExists(skinDir)) {
+            warn("Removing old semi-broken skin folder: " + skinDir);
+            IO::DeleteFolder(skinDir, true);
+        }
+        auto zipFile = skinDir + ".zip";
+        if (IO::FileExists(zipFile)) {
+            warn("Removing old semi-broken skin zip file: " + zipFile);
+            IO::Delete(zipFile);
+        }
+    }
+    State_CheckedForV1Skins = true;
 }
 
-
-enum ChoiceOfModel {
-    StadiumMale,
-    StadiumFemale
+void PopulateAuxSkins() {
+    AwaitCustomTextures();
+    UI::ShowNotification("Installing: Alt Player Skins", "Installing: StadiumFemaleDG, StadiumMaleDG, StadiumFemaleCG, StadiumMaleCG to Skins/Models/HelmetPilot/\n\n(Note: might get frame-y)", vec4(.5, .6, .2, .8), 5000);
+    sleep(50);
+    ModelSpec(ModelPreset::FemaleDG).WriteModelSpecTo("StadiumFemaleDG");
+    sleep(50);
+    ModelSpec(ModelPreset::MaleDG).WriteModelSpecTo("StadiumMaleDG");
+    sleep(50);
+    ModelSpec(ModelPreset::FemaleCG).WriteModelSpecTo("StadiumFemaleCG");
+    sleep(50);
+    ModelSpec(ModelPreset::MaleCG).WriteModelSpecTo("StadiumMaleCG");
+    UI::ShowNotification("Alt Player Skins Installed", "Added new skins: StadiumFemaleDG, StadiumMaleDG, StadiumFemaleCG, StadiumMaleCG to Skins/Models/HelmetPilot/", vec4(.1, .5, .2, .8), 10000);
 }
-
-string[] ChoiceOfModelStr = {"StadiumMale", "StadiumFemale"};
-
-// use Fids::GetGameFolder
-string[][] ModelFolders =
-    { { "GameData/Skins/Models/CharacterPilot/StadiumMale", "GameData/Skins/Models/HelmetPilot/Stadium" }
-    , { "GameData/Skins/Models/CharacterPilot/StadiumFemale" }
-};
-
-// we need to set both, I think
-string[] destinationFolders =
-    { IO::FromUserGameFolder("Skins\\Models\\CharacterPilot\\StadiumMale")
-    , IO::FromUserGameFolder("Skins\\Models\\HelmetPilot\\Stadium")
-    };
-
-string opExtractBase = IO::FromDataFolder("Extract");
 
 void UpdatePlayerSkin() {
-    // auto skinFolder = 'GameData/Skins/Models/CharacterPilot/StadiumFemale';
-    auto skinFolders = ModelFolders[Setting_CurrentModel];
-
-    for (uint df = 0; df < destinationFolders.Length; df++) {
-        auto destinationFolder = destinationFolders[df];
-        print('Copying skin to destination folder: ' + destinationFolder);
-        if (!IO::FolderExists(destinationFolder))
-            IO::CreateFolder(destinationFolder, true);
-        auto existingFiles = IO::IndexFolder(destinationFolder, true);
-        for (uint i = 0; i < existingFiles.Length; i++) {
-            auto exF = existingFiles[i];
-            auto exFL = exF.ToLower();
-            if (exFL.EndsWith('.dds') || exFL.EndsWith('.tga') || exFL.EndsWith('.gbx')) {
-                trace('Removing prior file: ' + exF);
-                IO::Delete(exF);
-            }
-        }
-
-        for (uint sf = 0; sf < skinFolders.Length; sf++) {
-            auto skinFolder = skinFolders[sf];
-            auto fid = cast<CSystemFidsFolder>(Fids::GetGameFolder(skinFolder));
-            if (fid !is null) {
-                // PrintLeaves(fid);
-                for (uint i = 0; i < fid.Leaves.Length; i++) {
-                    auto newF = fid.Leaves[i];
-                    if (string(newF.FileName).ToLower() != "player.anim.gbx")  // we always use StadiumMale for this
-                        ExtractAndCopySkin(skinFolder, newF, destinationFolder);
-                }
-            } else {
-                auto msg = "Error: unable to open game folder at path: " + skinFolder;
-                warn(msg);
-                UI::ShowNotification("Alt Player Skin (Error)", msg, vec4(.9, .6, .0, .9));
-            }
-        }
+    if (!Consent_ChangeDefault) return;
+    if (Setting_CurrentModel == ChoiceOfModel::MaleDarkGray) {
+        RemoveCustomPrimarySkin();
+    } else {
+        AwaitCustomTextures();
+        auto choice = ModelPreset(Setting_CurrentModel ^ 1);  // flip last bit to swap to ModelPreset
+        ModelSpec(choice).WriteModelSpecTo("Stadium");
     }
-
-    // we need to use Player.Anim.Gbx from StadiumMale to get in-game animations (like steering) to work properly
-    auto smFolder = ModelFolders[0][0];
-    auto fid = cast<CSystemFidsFolder>(Fids::GetGameFolder(smFolder));
-    for (uint df = 0; df < destinationFolders.Length; df++) {
-        string dest = destinationFolders[df];
-        for (uint i = 0; i < fid.Leaves.Length; i++) {
-            auto newF = fid.Leaves[i];
-            if (string(newF.FileName).ToLower() == "player.anim.gbx") {
-                ExtractAndCopySkin(smFolder, newF, dest);
-            }
-        }
-    }
-
     auto msg = "Success! Restart now required. \n \n Set skin to " + ChoiceOfModelStr[Setting_CurrentModel] + ". \n \n Please restart the game to see changes.";
     UI::ShowNotification("Alt Player Skin: " + ChoiceOfModelStr[Setting_CurrentModel], msg, vec4(.1, .5, .2, .4), 15000);
-    Setting_FirstRunDone = true;
-}
-
-void ExtractAndCopySkin(const string &in base, CSystemFidFile@ fid, const string &in destinationFolder) {
-    string src = opExtractBase + '\\' + base + '\\' + fid.FileName;
-    string dest = destinationFolder + '\\' + fid.FileName;
-    bool extractAfter = IO::FileExists(src);
-    fid.Extract();
-    IO::Move(src, dest);
-    trace('Moved ' + src + ' to ' + dest);
-    if (extractAfter) fid.Extract();
-}
-
-void PrintLeaves(CSystemFidsFolder@ f) {
-    print('------------');
-    print('contents of: ' + f.FullDirName);
-    for (uint i = 0; i < f.Leaves.Length; i++) {
-        print('- ' + f.Leaves[i].FileName);
-    }
-    print('------------');
 }
