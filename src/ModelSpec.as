@@ -13,6 +13,7 @@ const string ExtractBase = IO::FromDataFolder("Extract\\");
 
 const string MaleCGHelmetUrl = "https://s3.us-east-1.wasabisys.com/xert/TM/MaleCG_Helmet_B.dds";
 const string MaleCGBodyUrl = "https://s3.us-east-1.wasabisys.com/xert/TM/MaleCG_Body_B.dds";
+const string FemaleDGBodyUrl = "https://s3.us-east-1.wasabisys.com/xert/TM/FemaleDG_Body_B.dds";
 
 const string[] SourceFolders = { "GameData/Skins/Models/CharacterPilot/", "GameData/Skins/Models/HelmetPilot/" };
 
@@ -28,6 +29,12 @@ string PathToSourceZipOrFolder(const string &in srcName) {
 const string[][] CustomTextures =
     { { MaleCGHelmetUrl, "MaleCG_Helmet_B.dds" }
     , { MaleCGBodyUrl, "MaleCG_Body_B.dds" }
+    , { FemaleDGBodyUrl, "FemaleDG_Body_B.dds" }
+    };
+
+dictionary CustTexIdMap =
+    { {"MaleCG_Body", CustomTextures[1][1] }
+    , {"FemaleDG_Body", CustomTextures[2][1] }
     };
 
 void EnsureCustomTexturesDownloaded() {
@@ -35,7 +42,6 @@ void EnsureCustomTexturesDownloaded() {
         string url = CustomTextures[i][0];
         string fname = CustomTextures[i][1];
         startnew(CheckCustomTextureAndDLWhenAbsent, CustomTexture(url, fname));
-        // CheckCustomTextureAndDLWhenAbsent(CustomTexture(url, fname));
     }
 }
 
@@ -84,7 +90,7 @@ const string _AnimFile = "Player.Anim.Gbx";
 const string _IconFile = "Icon.tga";
 
 class ModelSpec {
-    string m_bodySrc;
+    string[] m_bodySrc = {};
     string m_cvSrc;
     string m_helmetSrc;
     string m_hvSrc;
@@ -96,7 +102,10 @@ class ModelSpec {
     ModelSpec(ModelPreset mp) {
         bool male = mp & 1 == 1;
         bool white = mp & 2 == 2;
-        m_bodySrc = (!white) ? "StadiumMale" : (!male ? "StadiumFemale" : "MaleCG_Body");
+        m_bodySrc.InsertLast(male ? "StadiumMale" : "StadiumFemale");
+        if (!male ^^ white)
+            m_bodySrc.InsertLast(mp == ModelPreset::MaleCG ? "MaleCG_Body" : "FemaleDG_Body");
+        // ,"FemaleDG_Body"}) : (!male ? "StadiumFemale" : "StadiumMale|MaleCG_Body");
         m_cvSrc = (!white) ? "StadiumMale" : "StadiumFemale";
         m_helmetSrc = (male && white) ? "MaleCG_Helmet" : "Stadium";
         m_hvSrc = (!white) ? "Stadium" : "StadiumFemale";
@@ -148,6 +157,7 @@ class ModelSpec {
     }
 
     private void CopyLocalFile(const string &in localSrc, const string &in dest) {
+        if (localSrc.Length == 0) throw('CopyLocalFile got empty string as localSrc');
         auto src = IO::FromStorageFolder(localSrc);
         IO::File srcF(src, IO::FileMode::Read);
         IO::File destF(dest, IO::FileMode::Write);
@@ -163,12 +173,9 @@ class ModelSpec {
     }
 
     private void WriteBodyFiles(const string &in SkinPath) {
-        if (m_bodySrc == "MaleCG_Body") {
-            WriteFiles("StadiumMale", _BodyFiles, SkinPath);
-            CopyLocalFile("MaleCG_Body_B.dds", SkinPath + "\\Body_B.dds");
-        } else {
-            WriteFiles(m_bodySrc, _BodyFiles, SkinPath);
-        }
+        WriteFiles(m_bodySrc[0], _BodyFiles, SkinPath);
+        if (m_bodySrc.Length <= 1) return;
+        CopyLocalFile(string(CustTexIdMap[m_bodySrc[1]]), SkinPath + "\\Body_B.dds");
     }
 
     private void WriteCVFiles(const string &in SkinPath) {
