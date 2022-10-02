@@ -39,6 +39,10 @@ ChoiceOfModel Setting_CurrentModel = ChoiceOfModel::MaleDarkGray;
 
 [SettingsTab name="0. General"]
 void RenderMenuBgSettings() {
+    if (UI::Button("Open Skins Folder in Explorer")) {
+        OpenExplorerPath(UI::FromUserGameFolder("Skins\\Models\\HelmetPilot"));
+    }
+
     bool newEnabled = UI::Checkbox("Plugin Enabled?", Setting_Enabled);
     if (newEnabled && !Setting_Enabled) startnew(OnSettingsChanged);  // we need to manually check for updated settings
     Setting_Enabled = newEnabled;
