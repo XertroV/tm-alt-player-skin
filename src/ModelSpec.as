@@ -150,7 +150,7 @@ class ModelSpec {
     }
 
     private void RunExtract(CSystemFidFile@ fid, const string &in src, const string &in dest) {
-        bool extractAfter = IO::FileExists(src);
+        bool extractAfter = IO::FileExists(ExtractBase + src);
         fid.Extract();
         IO::Move(ExtractBase + src, dest);
         if (extractAfter) fid.Extract();
