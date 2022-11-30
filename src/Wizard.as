@@ -8,7 +8,7 @@ bool Consent_ChangeDefault = false;
 [Setting hidden]
 bool Consent_AuxSkins = false;
 
-[SettingsTab name="1. Consent"]
+[SettingsTab name="1. Consent" icon="PencilSquareO"]
 void RenderConsentSettings() {
     Consent_ChangeDefault = UI::Checkbox("Manage Default Skin", Consent_ChangeDefault);
     AddSimpleTooltip("Management (including deletion) of the default character skin (HelmetPilot\\Stadium).\nGame restart required on change.");
@@ -49,7 +49,9 @@ namespace Wizard {
     }
 
     int2 get_WindowSize() {
-        return Vec2ToInt2(Int2ToVec2(FullScreenSize) * vec2(.75, .8));
+        auto ratio = 1.3;
+        float h = 0.8 * Draw::GetHeight();
+        return Vec2ToInt2(vec2(ratio * h, h));
     }
 
     void Render() {

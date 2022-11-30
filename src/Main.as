@@ -13,6 +13,7 @@
   */
 
 void Main() {
+    AddBmxSkins();
     // we do stuff through coros so settings have a chance to load
     startnew(CoroMain);
     // startnew(TestMain);
@@ -90,7 +91,17 @@ void PopulateAuxSkins() {
     ModelSpec(ModelPreset::FemaleCG).WriteModelSpecTo("StadiumFemaleCG");
     sleep(50);
     ModelSpec(ModelPreset::MaleCG).WriteModelSpecTo("StadiumMaleCG");
-    UI::ShowNotification("Alt Player Skins Installed", "Added new skins: StadiumFemaleDG, StadiumMaleDG, StadiumFemaleCG, StadiumMaleCG to Skins/Models/HelmetPilot/", vec4(.1, .5, .2, .8), 10000);
+    sleep(50);
+    ModelSpec(ModelPreset::MaleGold).WriteModelSpecTo("bmx22c_MaleGold");
+    sleep(50);
+    ModelSpec(ModelPreset::MalePink).WriteModelSpecTo("bmx22c_MalePink");
+    sleep(50);
+    ModelSpec(ModelPreset::MaleRed).WriteModelSpecTo("bmx22c_MaleRed");
+    sleep(50);
+    ModelSpec(ModelPreset::MaleGreen).WriteModelSpecTo("bmx22c_MaleGreen");
+    sleep(50);
+    ModelSpec(ModelPreset::MaleBlue).WriteModelSpecTo("bmx22c_MaleBlue");
+    UI::ShowNotification("Alt Player Skins Installed", "Added new skins to Skins/Models/HelmetPilot/", vec4(.1, .5, .2, .8), 10000);
 }
 
 void UpdatePlayerSkin() {
@@ -99,9 +110,15 @@ void UpdatePlayerSkin() {
         RemoveCustomPrimarySkin();
     } else {
         AwaitCustomTextures();
-        auto choice = ModelPreset(Setting_CurrentModel ^ 1);  // flip last bit to swap to ModelPreset
+        ModelPreset choice;
+        if (uint(Setting_CurrentModel) < 4)  // std models
+            choice = ModelPreset(Setting_CurrentModel ^ 1);  // flip last bit to swap to ModelPreset
+        else if (uint(Setting_CurrentModel) <= 13) {  // bmx22c models
+            choice = ModelPreset((uint(Setting_CurrentModel) - 4) * 2 + 5);
+        }
         ModelSpec(choice).WriteModelSpecTo("Stadium");
     }
-    auto msg = "Success! Restart now required. \n \n Set skin to " + ChoiceOfModelStr[Setting_CurrentModel] + ". \n \n Please restart the game to see changes.";
+    auto msg = "Success! Refresh or game restart now required. \n \n Set skin to " + ChoiceOfModelStr[Setting_CurrentModel] + ". \n \n Navigate to 'Solo', 'Live', or 'Local' to refresh skins. (Changes should be visible after that.) If that does not work, please restart the game.";
     UI::ShowNotification("Alt Player Skin: " + ChoiceOfModelStr[Setting_CurrentModel], msg, vec4(.1, .5, .2, .4), 15000);
+    startnew(WaitToRefreshSkins);
 }

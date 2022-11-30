@@ -27,20 +27,35 @@ enum ChoiceOfModel {
     MaleDarkGray,
     FemaleDarkGray,
     MaleCreamyGold,
-    FemaleCreamyGold
+    FemaleCreamyGold,
+    MaleGold,
+    MalePink,
+    MaleRed,
+    MaleGreen,
+    MaleBlue
 }
 
-string[] ChoiceOfModelStr = { "Male - Dark Gray (Default)", "Female - Dark Gray", "Male - Creamy Gold", "Female - Creamy Gold" };
+string[] ChoiceOfModelStr =
+    { "Male - Dark Gray (Default)"
+    , "Female - Dark Gray"
+    , "Male - Creamy Gold"
+    , "Female - Creamy Gold"
+    , "Male - Gold"
+    , "Male - Pink"
+    , "Male - Red"
+    , "Male - Green"
+    , "Male - Blue"
+    };
 
 [Setting hidden]
 ChoiceOfModel Setting_CurrentModel = ChoiceOfModel::MaleDarkGray;
 
 /* settings rendering */
 
-[SettingsTab name="0. General"]
+[SettingsTab name="0. Skins" icon="Users"]
 void RenderMenuBgSettings() {
     if (UI::Button("Open Skins Folder in Explorer")) {
-        OpenExplorerPath(UI::FromUserGameFolder("Skins\\Models\\HelmetPilot"));
+        OpenExplorerPath(IO::FromUserGameFolder("Skins\\Models\\HelmetPilot"));
     }
 
     bool newEnabled = UI::Checkbox("Plugin Enabled?", Setting_Enabled);
@@ -70,6 +85,12 @@ void RenderMenuBgSettings() {
         startnew(OnSettingsChanged);
     }
 
+    if (currWaiting) {
+        UI::Dummy(vec2(15, 0));
+        UI::Text("\\$<\\$cf3Note: a skin refresh is pending.\\$>\nPlease navigate to the 'Solo', 'Live', or 'Local' main menu page to reload skins.");
+        UI::Text("Current Menu Page: " + GetCurrentMenuPage());
+    }
+
     UI::Dummy(vec2(1, 25));
     SubHeading("Aux Skins");
     UI::Dummy(vec2(25, 0));
@@ -97,18 +118,29 @@ UI::Texture@ maledarkgray = UI::LoadTexture("img/male-dark-gray.png");
 UI::Texture@ femaledarkgray = UI::LoadTexture("img/female-dark-gray.png");
 UI::Texture@ malecreamygold = UI::LoadTexture("img/male-creamy-gold.png");
 UI::Texture@ femalecreamygold = UI::LoadTexture("img/female-creamy-gold.png");
+UI::Texture@ bmx22cGold = UI::LoadTexture("img/bmx22c_MaleGold.png");
+UI::Texture@ bmx22cRed = UI::LoadTexture("img/bmx22c_MaleRed.png");
+UI::Texture@ bmx22cPink = UI::LoadTexture("img/bmx22c_MalePink.png");
+UI::Texture@ bmx22cGreen = UI::LoadTexture("img/bmx22c_MaleGreen.png");
+UI::Texture@ bmx22cBlue = UI::LoadTexture("img/bmx22c_MaleBlue.png");
+
+UI::Texture@[] bmx22cTexs = {bmx22cGold, bmx22cPink, bmx22cRed, bmx22cGreen, bmx22cBlue};
 
 bool DrawModelOption(UI::Texture@ tex, const string &in name, bool selected, bool inTable = true) {
     if (inTable) UI::TableNextColumn();
+    if (tex is null) return false;
     float ImgWidth = UI::GetContentRegionAvail().x;
-    UI::Image(tex, vec2(ImgWidth, ImgWidth));
+    auto ratio = tex.GetSize().x / tex.GetSize().y;
+    UI::Image(tex, vec2(ImgWidth, ImgWidth / ratio));
     bool ret = UI::IsItemClicked();
-    ret = ret || UI::RadioButton(name, selected);
+    ret = UI::RadioButton(name, selected) || ret;
     return ret;
 }
 
 void DrawModelTable(uint nCols = 4) {
+    auto preModel = Setting_CurrentModel;
     UI::PushFont(font18);
+
     if (UI::BeginTable("pac-skin-table", nCols, TableFlagsStretchSame())) {
         // 1,1
         if (DrawModelOption(maledarkgray, "Male, Dark Gray Suit (Default)", Setting_CurrentModel == ChoiceOfModel::MaleDarkGray))
@@ -124,5 +156,16 @@ void DrawModelTable(uint nCols = 4) {
             Setting_CurrentModel = ChoiceOfModel::FemaleCreamyGold;
         UI::EndTable();
     }
+
+    if (UI::BeginTable("pac-skin-table-bmx", 5, TableFlagsStretchSame())) {
+        for (uint i = 0; i < 5; i++) {
+            if (DrawModelOption(bmx22cTexs[i], ChoiceOfModelStr[i + 4], Setting_CurrentModel == ChoiceOfModel(4 + i)))
+                Setting_CurrentModel = ChoiceOfModel(4 + i);
+        }
+        UI::EndTable();
+    }
+
     UI::PopFont();
+    if (preModel != Setting_CurrentModel)
+        startnew(OnSettingsChanged);
 }
